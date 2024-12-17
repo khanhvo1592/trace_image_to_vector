@@ -78,25 +78,31 @@ def remove_white_background(input_path, output_path):
         print(f"Lỗi khi xử lý ảnh trong suốt: {str(e)}")
         return False
 
-def calculate_dimensions(width, height):
-    """Tính toán kích thước mới giữ nguyên tỷ lệ gốc"""
-    # Giữ nguyên tỷ lệ gốc
+def calculate_dimensions(width, height, target_size=600):
+    """Tính toán kích thước mới giữ nguyên tỷ lệ"""
     aspect_ratio = width / height
     
-    # Ví dụ: 3:2, 2:3, 3:4, etc.
-    if width > height:
-        # Ảnh ngang (ví dụ 3:2)
-        new_width = 144
-        new_height = int(144 / aspect_ratio)
+    if width >= height:
+        # Ảnh ngang
+        if aspect_ratio >= 2:  # Tỷ lệ >= 2:1
+            new_width = target_size
+            new_height = int(target_size / aspect_ratio)
+        else:
+            new_height = target_size
+            new_width = int(target_size * aspect_ratio)
     else:
-        # Ảnh dọc (ví dụ 2:3)
-        new_height = 144
-        new_width = int(144 * aspect_ratio)
+        # Ảnh dọc
+        if aspect_ratio <= 0.5:  # Tỷ lệ <= 1:2
+            new_height = target_size
+            new_width = int(target_size * aspect_ratio)
+        else:
+            new_width = target_size
+            new_height = int(target_size / aspect_ratio)
     
     return new_width, new_height
 
 def resize_pdf(input_path, output_path):
-    """Scale PDF giữ nguyên tỷ lệ gốc"""
+    """Scale PDF về kích thước 144x144"""
     try:
         # Đọc file PDF gốc
         doc = fitz.open(input_path)
@@ -107,17 +113,15 @@ def resize_pdf(input_path, output_path):
         width = float(rect.width)
         height = float(rect.height)
         
-        # Tính kích thước mới giữ nguyên tỷ lệ
-        new_width, new_height = calculate_dimensions(width, height)
+        # Tính tỷ lệ scale
+        scale = 144 / max(width, height)
         
-        # Tạo PDF mới với kích thước tính toán
+        # Tạo PDF mới với kích thước 144x144
         new_doc = fitz.open()
-        new_page = new_doc.new_page(width=new_width, height=new_height)
+        new_page = new_doc.new_page(width=144, height=144)
         
-        # Scale nội dung giữ nguyên tỷ lệ
-        scale_x = new_width / width
-        scale_y = new_height / height
-        matrix = fitz.Matrix(scale_x, scale_y)
+        # Scale nội dung
+        matrix = fitz.Matrix(scale, scale)
         new_page.show_pdf_page(new_page.rect, doc, 0, matrix)
         
         # Lưu file
@@ -127,19 +131,19 @@ def resize_pdf(input_path, output_path):
         doc.close()
         new_doc.close()
         
-        print(f"Đã resize PDF thành {new_width}x{new_height}")
+        print(f"Đã resize PDF xuống 144x144")
         
     except Exception as e:
         print(f"Lỗi khi resize PDF: {str(e)}")
 
 def create_svg_with_transparency(img, new_width, new_height):
-    """Tạo SVG với kích thước tương ứng tỷ lệ gốc"""
+    """Tạo SVG với màu đen và phần trong suốt (cả bên trong) thành trắng"""
     svg = Element('svg', {
         'xmlns': 'http://www.w3.org/2000/svg',
-        'width': f'{new_width}pt',  # Sử dụng kích thước thực
-        'height': f'{new_height}pt',
+        'width': '144pt',
+        'height': '144pt',
         'viewBox': f'0 0 {new_width} {new_height}',
-        'preserveAspectRatio': 'none'  # Cho phép scale không giữ tỷ lệ nếu cần
+        'preserveAspectRatio': 'xMidYMid meet'
     })
     
     # Xử lý alpha channel và màu
