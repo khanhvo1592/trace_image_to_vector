@@ -27,3 +27,6 @@ python trace_image.py
 - Chương trình sẽ tạo ra các file pdf đã xử lý răng cưa và tăng chất lượng trong folder output
 - Các file pdf đã xử lý răng cưa và tăng chất lượng sẽ được đặt tên theo đúng thứ tự của các file hình ảnh trong folder input
 
+
+--
+inkscape --actions="EditSelectAll;FileImportBitmap"

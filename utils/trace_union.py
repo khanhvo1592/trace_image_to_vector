@@ -1,6 +1,5 @@
 import os
 import subprocess
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 def trace_bitmap_with_inkscape(input_path, output_path):
     """
@@ -30,20 +29,15 @@ def batch_trace_bitmap(input_dir, output_dir):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    with ThreadPoolExecutor() as executor:
-        futures = []
-        for file in os.listdir(input_dir):
-            if file.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):  # Hỗ trợ các định dạng ảnh
-                input_path = os.path.join(input_dir, file)
-                output_path = os.path.join(output_dir, f"{os.path.splitext(file)[0]}.pdf")
-                print(f"Đang xử lý: {file}")
-                futures.append(executor.submit(trace_bitmap_with_inkscape, input_path, output_path))
-
-        for future in as_completed(futures):
+    for file in os.listdir(input_dir):
+        if file.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')):  # Hỗ trợ các định dạng ảnh
+            input_path = os.path.join(input_dir, file)
+            output_path = os.path.join(output_dir, f"{os.path.splitext(file)[0]}.pdf")
             try:
-                future.result()  # Get the result to raise any exceptions
+                print(f"Đang xử lý: {file}")
+                trace_bitmap_with_inkscape(input_path, output_path)
             except Exception as e:
-                print(f"Lỗi khi xử lý: {e}")
+                print(f"Lỗi khi xử lý {file}: {e}")
 
 if __name__ == "__main__":
     input_directory = "input"   # Thư mục chứa các ảnh bitmap đầu vào
